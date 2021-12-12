@@ -48,62 +48,60 @@ router.post("/shorturl", function (req, res, next) {
 
   if (parsedUrl.length < 2) {
     res.json({ error: 'invalid url' });
-  } else if (parsedUrl[0].slice(0,3) === 'ftp') {
-    res.json({ error: 'invalid url' });
   } else {
     parsedUrl = parsedUrl[parsedUrl.length - 1];
     dns.lookup(parsedUrl, function (err, address, family) {
       console.log('address: %j family: IPv%s', address, family);
-      if (err) {
-        res.json({ error: 'invalid url' });
-      } else {
-        clearTimeout(t);
-        URL.countDocuments({})
-          .then(count => {
-            existingUserCount = count;
-            return existingUserCount;
-          })
-          .then(existingUserCount => {
-            URL.find({ 'original_url': req.body["url"] }, function (err, urlData) {
-              if (err) return next(err);
-            }).clone().exec()
-              .then(dataOut => {
-                if (dataOut.length !== 0) {
-                  res.json({
-                    original_url: dataOut[0]['original_url'],
-                    short_url: dataOut[0]['short_url']
-                  });
-                } else {
-                  newUrlData = {
-                    original_url: req.body["url"],
-                    short_url: existingUserCount + 1
-                  };
-                  createURL(newUrlData, function (err, data) {
-                    if (err) return next(err);
-                    if (!data) {
-                      console.log("Can't save data!");
-                      return next({ message: "creaAndSaveURL can't save data! check JSON input." });
-                    }
+      clearTimeout(t);
+      URL.countDocuments({})
+        .then(count => {
+          existingUserCount = count;
+          return existingUserCount;
+        })
+        .then(existingUserCount => {
+          URL.find({ 'original_url': req.body["url"] }, function (err, urlData) {
+            if (err) return next(err);
+          }).clone().exec()
+            .then(dataOut => {
+              if (dataOut.length !== 0) {
+                res.json({
+                  original_url: dataOut[0]['original_url'],
+                  short_url: dataOut[0]['short_url']
+                });
+              } else {
+                newUrlData = {
+                  original_url: req.body["url"],
+                  short_url: existingUserCount + 1
+                };
+                createURL(newUrlData, function (err, data) {
+                  if (err) return next(err);
+                  if (!data) {
+                    console.log("Can't save data!");
+                    return next({ message: "creaAndSaveURL can't save data! check JSON input." });
+                  }
 
-                    URL.findById(data._id, function (err, urlData) {
-                      if (err) return next(err);
-                      res.json({
-                        original_url: urlData['original_url'],
-                        short_url: parseInt(urlData['short_url'])
-                      });
-                      next();
+                  URL.findById(data._id, function (err, urlData) {
+                    if (err) return next(err);
+                    res.json({
+                      original_url: urlData['original_url'],
+                      short_url: parseInt(urlData['short_url'])
                     });
-                  })
-                }
-              })
-              .catch(err => {
-                next(err);
-              })
-          })
-          .catch(err => {
-            next(err);
-          });
-      };
+                    next();
+                  });
+                })
+              }
+            })
+            .catch(err => {
+              next(err);
+            })
+        })
+        .catch(err => {
+          next(err);
+        });
+      // if (err) {
+      //   res.json({ error: 'invalid url' });
+      // } else {
+      // };
     });
   }
 }).get('/shorturl/:urlshort', function (req, res, next) {
