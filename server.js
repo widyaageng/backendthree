@@ -36,65 +36,82 @@ app.get('/api/hello', function (req, res) {
   res.json({ greeting: 'hello API' });
 });
 
-app.get('/api/shorturl', function (req, res) {
-  res.json(req.body);
-});
-
-app.post('/api/shorturl', function (req, res) {
-  let parsedUrl = req.body['url'].split(/https:\/\/www.|http:\/\/www./)
-  parsedUrl = parsedUrl[parsedUrl.length - 1];
-  console.log(parsedUrl);
-  dns.lookup(parsedUrl, function (err, address, family) {
-    console.log('address: %j family: IPv%s', address, family);
-    if (err) {
-      res.json({ error: 'invalid url' });
-    } else {
-      res.json(req.body);
-    };
-  });
-});
-
 const createURL = require("./db.js").createAndSaveURL;
-router.post("/test", function (req, res, next) {
-  console.log(`req: ${JSON.stringify(req.body)}`);
+router.post("/shorturl", function (req, res, next) {
   var existingUserCount = 0;
-  let t = setTimeout(() => {
-    next({ message: "timeout" });
-  }, TIMEOUT);
+  var newUrlData = {};
 
-  URL.count({}, function (err, count) {
-    existingUserCount = count;
-    console.log(`in count ${existingUserCount}`);
-  })
+  let parsedUrl = req.body['url'].split(/https:\/\/www.|http:\/\/www./)
 
-  let newUrlData = {
-    original_url: req.body['url'],
-    short_url: existingUserCount + 1
-  }
-  
-  console.log(newUrlData);
-
-  createURL(newUrlData, function (err, data) {
-    clearTimeout(t);
-    if (err) return next(err);
-    if (!data) {
-      console.log("Can't save data!");
-      return next({ message: "creaAndSaveURL can't save data! check JSON input." });
-    }
-
-    URL.count({}, function (err, count) {
-      console.log("Number of users before create:", existingUserCount);
-      console.log("Number of users:", count);
-    })
-
-    URL.findById(data._id, function (err, urldata) {
-      if (err) return next(err);
-      res.json(urldata);
-      URL.deleteMany({}, function (err, urldata) {
-        if (err) return next(err);
-        console.log(`Model deleted entirely: ${JSON.stringify(urldata)}`);
-      })
+  if (parsedUrl.length < 2) {
+    res.json({ error: 'invalid url' });
+  } else {
+    parsedUrl = parsedUrl[parsedUrl.length - 1];
+    dns.lookup(parsedUrl, function (err, address, family) {
+      console.log('address: %j family: IPv%s', address, family);
+      if (err) {
+        res.json({ error: 'invalid url' });
+      } else {
+        URL.countDocuments({})
+          .then(count => {
+            existingUserCount = count;
+            return existingUserCount;
+          })
+          .then(existingUserCount => {
+            URL.find({ 'original_url': req.body["url"] }, function (err, urlData) {
+              if (err) return next(err);
+            }).clone().exec()
+              .then(dataOut => {
+                if (dataOut.length !== 0) {
+                  res.json(dataOut[0]);
+                } else {
+                  newUrlData = {
+                    original_url: req.body["url"],
+                    short_url: existingUserCount + 1
+                  };
+                  createURL(newUrlData, function (err, data) {
+                    if (err) return next(err);
+                    if (!data) {
+                      console.log("Can't save data!");
+                      return next({ message: "creaAndSaveURL can't save data! check JSON input." });
+                    }
+      
+                    URL.findById(data._id, function (err, urlData) {
+                      if (err) return next(err);
+                      res.json(urlData);
+                    });
+                  })
+                }
+              })
+              .catch(err => {
+                next(err);
+              })
+          })
+          .catch(err => {
+            next(err);
+          });
+      };
     });
+  }
+}).get('/shorturl/:urlshort', function (req, res, next) {
+  URL.find({ 'short_url': req.params['urlshort'] }, function (err, urlData) {
+    if (err) return next(err);
+    console.log("URL DATA: ", urlData.length);
+    if (urlData.length < 1) {
+      res.json({ 'error': 'Wrong format' });
+      next();
+    } else {
+      // res.json(urlData);
+      res.redirect(urlData[0]['original_url']);
+      next();
+    }
+  })
+});
+
+router.get('/deleteAll', function (req, res, next) {
+  URL.deleteMany({}, function(err, urlData) {
+    if (err) return next(err);
+    res.json(urlData);
   })
 })
 
