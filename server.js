@@ -49,6 +49,7 @@ router.post("/shorturl", function (req, res, next) {
 
   if (parsedUrl.length < 2) {
     res.json({ error: 'invalid url' });
+    console.log(parsedUrl);
   } else {
     parsedUrl = parsedUrl[parsedUrl.length - 1];
     dns.lookup(parsedUrl, function (err, address, family) {
