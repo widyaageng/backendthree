@@ -38,6 +38,7 @@ app.get('/api/hello', function (req, res) {
 
 const createURL = require("./db.js").createAndSaveURL;
 router.post("/shorturl", function (req, res, next) {
+  console.log(req.body);
   var existingUserCount = 0;
   var newUrlData = {};
   let t = setTimeout(() => {
