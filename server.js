@@ -40,6 +40,9 @@ const createURL = require("./db.js").createAndSaveURL;
 router.post("/shorturl", function (req, res, next) {
   var existingUserCount = 0;
   var newUrlData = {};
+  let t = setTimeout(() => {
+    next({ message: "timeout" });
+  }, TIMEOUT);
 
   let parsedUrl = req.body['url'].split(/https:\/\/www.|http:\/\/www./)
 
@@ -52,6 +55,7 @@ router.post("/shorturl", function (req, res, next) {
       if (err) {
         res.json({ error: 'invalid url' });
       } else {
+        clearTimeout(t);
         URL.countDocuments({})
           .then(count => {
             existingUserCount = count;
@@ -100,7 +104,12 @@ router.post("/shorturl", function (req, res, next) {
     });
   }
 }).get('/shorturl/:urlshort', function (req, res, next) {
+  let t = setTimeout(() => {
+    next({ message: "timeout" });
+  }, TIMEOUT);
+
   URL.find({ 'short_url': req.params['urlshort'] }, function (err, urlData) {
+    clearTimeout(t);
     if (err) return next(err);
     console.log("URL DATA: ", urlData.length);
     if (urlData.length < 1) {
