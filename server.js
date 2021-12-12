@@ -120,6 +120,7 @@ router.get('/deleteAll', function (req, res, next) {
     res.json({
       recordsDeleted: urlData['deletedCount']
     });
+    next();
   })
 })
 
