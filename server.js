@@ -38,23 +38,23 @@ app.get('/api/hello', function (req, res) {
 
 const createURL = require("./db.js").createAndSaveURL;
 router.post("/shorturl", function (req, res, next) {
-  console.log(req.body);
   var existingUserCount = 0;
   var newUrlData = {};
   let t = setTimeout(() => {
     next({ message: "timeout" });
   }, TIMEOUT);
 
-  let parsedUrl = req.body['url'].split(/https:\/\/www.|http:\/\/www./);
+  let parsedUrl = req.body['url'].split(/https:\/\/www.|http:\/\/www./)
 
-  if (parsedUrl.length > 50) {
+  if (parsedUrl.length < 2) {
     res.json({ error: 'invalid url' });
-    console.log(`Here is at -1 handler ${parsedUrl.length }`);
+  } else if (parsedUrl[0].slice(0,3) === 'ftp') {
+    res.json({ error: 'invalid url' });
   } else {
     parsedUrl = parsedUrl[parsedUrl.length - 1];
     dns.lookup(parsedUrl, function (err, address, family) {
       console.log('address: %j family: IPv%s', address, family);
-      if (!err) {
+      if (err) {
         res.json({ error: 'invalid url' });
       } else {
         clearTimeout(t);
