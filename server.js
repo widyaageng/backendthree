@@ -89,6 +89,7 @@ router.post("/shorturl", function (req, res, next) {
                         original_url: urlData['original_url'],
                         short_url: parseInt(urlData['short_url'])
                       });
+                      next();
                     });
                   })
                 }
