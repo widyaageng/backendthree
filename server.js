@@ -117,7 +117,9 @@ router.post("/shorturl", function (req, res, next) {
 router.get('/deleteAll', function (req, res, next) {
   URL.deleteMany({}, function (err, urlData) {
     if (err) return next(err);
-    res.json(urlData);
+    res.json({
+      recordsDeleted: urlData['deletedCount']
+    });
   })
 })
 
