@@ -63,7 +63,10 @@ router.post("/shorturl", function (req, res, next) {
             }).clone().exec()
               .then(dataOut => {
                 if (dataOut.length !== 0) {
-                  res.json(dataOut[0]);
+                  res.json({
+                    original_url: dataOut[0]['original_url'],
+                    short_url: dataOut[0]['original_url']
+                  });
                 } else {
                   newUrlData = {
                     original_url: req.body["url"],
@@ -75,10 +78,13 @@ router.post("/shorturl", function (req, res, next) {
                       console.log("Can't save data!");
                       return next({ message: "creaAndSaveURL can't save data! check JSON input." });
                     }
-      
+
                     URL.findById(data._id, function (err, urlData) {
                       if (err) return next(err);
-                      res.json(urlData);
+                      res.json({
+                        original_url: urlData['original_url'],
+                        short_url: parseInt(urlData['short_url'])
+                      });
                     });
                   })
                 }
@@ -109,7 +115,7 @@ router.post("/shorturl", function (req, res, next) {
 });
 
 router.get('/deleteAll', function (req, res, next) {
-  URL.deleteMany({}, function(err, urlData) {
+  URL.deleteMany({}, function (err, urlData) {
     if (err) return next(err);
     res.json(urlData);
   })
