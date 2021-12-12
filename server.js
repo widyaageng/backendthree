@@ -65,7 +65,7 @@ router.post("/shorturl", function (req, res, next) {
                 if (dataOut.length !== 0) {
                   res.json({
                     original_url: dataOut[0]['original_url'],
-                    short_url: dataOut[0]['original_url']
+                    short_url: dataOut[0]['short_url']
                   });
                 } else {
                   newUrlData = {
