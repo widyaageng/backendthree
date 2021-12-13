@@ -44,8 +44,8 @@ router.post("/shorturl", function (req, res, next) {
     next({ message: "timeout" });
   }, TIMEOUT);
 
-  let parsedUrl = req.body['url'].split(/https:\/\/www.|http:\/\/www./)
-
+  let parsedUrl = req.body['url'].split(/https:\/\/|http:\/\//)
+  console.log("Parsed url is: ", parsedUrl);
   if (parsedUrl.length < 2) {
     res.json({ error: 'invalid url' });
   } else {
